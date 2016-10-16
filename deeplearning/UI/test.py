@@ -1,15 +1,19 @@
 # import the necessary packages
 from pyimagesearch.colordescriptor import ColorDescriptor
 from pyimagesearch.searcher import Searcher
+
 import cv2
 from Tkinter import *
 import tkFileDialog
 from PIL import Image, ImageTk, ImageDraw, ImageFont
+
 import os
 import matplotlib
 matplotlib.use('TkAgg')
 import moviepy.editor as mp
 import os.path
+
+from extract_acoustic import getAcousticFeatures
 
 class UI_class:
     def __init__(self, master, search_path, frame_storing_path):
@@ -27,6 +31,7 @@ class UI_class:
         self.cbutton.grid(row=1, column=2)
         downspace = Label(topframe).grid(row=3, columnspan=4)
 
+        print(sys.path)
         self.master.mainloop()
 
 
@@ -77,6 +82,8 @@ class UI_class:
             audiopath = os.path.dirname(audiopath)
             audiopath = os.path.join(audiopath, "audio/test.mp3")
             self.getAudioClip(self.filename, audiopath)
+            feature_mfcc, feature_spect, feature_zerocrossing, feature_energy = getAcousticFeatures(audiopath)
+            print("yay we win at life")
         except Exception, e:
             print(e)
 
