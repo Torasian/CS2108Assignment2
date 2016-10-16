@@ -6,6 +6,10 @@ from Tkinter import *
 import tkFileDialog
 from PIL import Image, ImageTk, ImageDraw, ImageFont
 import os
+import matplotlib
+matplotlib.use('TkAgg')
+import moviepy.editor as mp
+import os.path
 
 class UI_class:
     def __init__(self, master, search_path, frame_storing_path):
@@ -68,6 +72,14 @@ class UI_class:
             except Exception, e:
                 continue
 
+        try:
+            audiopath = os.path.dirname(self.filename)
+            audiopath = os.path.dirname(audiopath)
+            audiopath = os.path.join(audiopath, "audio/test.mp3")
+            self.getAudioClip(self.filename, audiopath)
+        except Exception, e:
+            print(e)
+
         self.query_img_frame.mainloop()
 
 
@@ -99,6 +111,10 @@ class UI_class:
 
         self.query_img_frame.mainloop()
 
+    def getAudioClip(self, video_reading_path, audio_storing_path):
+        clip = mp.VideoFileClip(video_reading_path)
+        clip.audio.write_audiofile(audio_storing_path)
+
 
 root = Tk()
-window = UI_class(root,search_path='../data/video/', frame_storing_path='../data/frame/')
+window = UI_class(root, search_path='../data/video/', frame_storing_path='../data/frame/')

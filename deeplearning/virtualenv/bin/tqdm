@@ -1,0 +1,11 @@
+#!/Users/gabrielgheorghian/Documents/School/Exchange/School/CS2108/CS2108Assignment2/deeplearning/virtualenv/bin/python
+
+# -*- coding: utf-8 -*-
+import re
+import sys
+
+from tqdm._main import main
+
+if __name__ == '__main__':
+    sys.argv[0] = re.sub(r'(-script\.pyw|\.exe)?$', '', sys.argv[0])
+    sys.exit(main())
