@@ -1,8 +1,4 @@
-# import the necessary packages
-from pyimagesearch.colordescriptor import ColorDescriptor
-from pyimagesearch.searcher import Searcher
 
-import cv2
 from Tkinter import *
 import tkFileDialog
 from PIL import Image, ImageTk, ImageDraw, ImageFont
@@ -12,6 +8,10 @@ import matplotlib
 matplotlib.use('TkAgg')
 import moviepy.editor as mp
 import os.path
+import glob
+import json
+
+
 
 from extract_acoustic import getAcousticFeatures
 
@@ -30,6 +30,8 @@ class UI_class:
         self.cbutton = Button(topframe, text=" Estimate its venue ", command=self.show_venue_category)
         self.cbutton.grid(row=1, column=2)
         downspace = Label(topframe).grid(row=3, columnspan=4)
+
+        self.loadAllVideos("/Users/WSH/Downloads/CS2108-Vine-Dataset/vine/training")
 
         print(sys.path)
         self.master.mainloop()
@@ -121,6 +123,19 @@ class UI_class:
     def getAudioClip(self, video_reading_path, audio_storing_path):
         clip = mp.VideoFileClip(video_reading_path)
         clip.audio.write_audiofile(audio_storing_path)
+
+
+    def loadAllVideos(self, pathname):
+        os.chdir(pathname)
+
+        data = []
+        for file in glob.glob("*.mp4"):
+            videoPath = os.path.abspath(file)
+            # videoPath = os.path.dirname(self.filename)
+            feature_energy = getAcousticFeatures(videoPath)
+            
+
+
 
 
 root = Tk()
