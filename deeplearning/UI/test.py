@@ -133,7 +133,7 @@ class UI_class:
             videoPath = os.path.abspath(file)
             # videoPath = os.path.dirname(self.filename)
             feature_energy = getAcousticFeatures(videoPath)
-            
+
 
 
 

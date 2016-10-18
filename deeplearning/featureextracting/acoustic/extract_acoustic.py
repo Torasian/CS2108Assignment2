@@ -27,24 +27,24 @@ def getAcousticFeatures(audio_reading_path):
     tempo, beat_frames = librosa.beat.beat_track(y=y_percussive, sr=sr)
 
     # 4. Compute MFCC features from the raw signal.
-    # feature_mfcc = librosa.feature.mfcc(y=y, sr=sr, hop_length=512, n_mfcc=13)
-    # print("MFCC Feature Done:", np.shape(feature_mfcc))
-    #
-    # # 5. Compute Melspectrogram features from the raw signal.
-    # feature_spect = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=128, fmax=80000)
-    # print("Melspectrogram Feature Done:", np.shape(feature_spect))
-    #
-    # # 6. Compute Zero-Crossing features from the raw signal.
-    # feature_zerocrossing = librosa.feature.zero_crossing_rate(y=y)
-    # print("Zero-Crossing Rate:", np.shape(feature_zerocrossing))
+    feature_mfcc = librosa.feature.mfcc(y=y, sr=sr, hop_length=512, n_mfcc=13)
+    print("MFCC Feature Done:", np.shape(feature_mfcc))
+
+    # 5. Compute Melspectrogram features from the raw signal.
+    feature_spect = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=128, fmax=80000)
+    print("Melspectrogram Feature Done:", np.shape(feature_spect))
+
+    # 6. Compute Zero-Crossing features from the raw signal.
+    feature_zerocrossing = librosa.feature.zero_crossing_rate(y=y)
+    print("Zero-Crossing Rate:", np.shape(feature_zerocrossing))
 
     # 7. Compute Root-Mean-Square (RMS) Energy for each frame.
     feature_energy = librosa.feature.rmse(y=y)
     print("Energy Feature:", np.shape(feature_energy))
 
-    return feature_energy
+    return feature_mfcc, feature_spect, feature_zerocrossing,feature_energy
 
-# feature_mfcc, feature_spect, feature_zerocrossing,
+
 
 
 if __name__ == '__main__':
