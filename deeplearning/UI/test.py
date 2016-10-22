@@ -1,10 +1,13 @@
-
 from Tkinter import *
 import tkFileDialog
 from PIL import Image, ImageTk, ImageDraw, ImageFont
 
+import cv2
 import os
 import matplotlib
+
+from extract_frame import getKeyFrames
+
 matplotlib.use('TkAgg')
 import moviepy.editor as mp
 import os.path
@@ -31,7 +34,7 @@ class UI_class:
         self.cbutton.grid(row=1, column=2)
         downspace = Label(topframe).grid(row=3, columnspan=4)
 
-        self.loadAllVideos("/Users/WSH/Downloads/CS2108-Vine-Dataset/vine/training")
+        #self.loadAllVideos("/Users/WSH/Downloads/CS2108-Vine-Dataset/vine/training")
 
         print(sys.path)
         self.master.mainloop()
@@ -46,6 +49,11 @@ class UI_class:
 
         allframes = os.listdir(self.frame_storing_path)
         self.videoname = self.filename.strip().split("/")[-1].replace(".mp4","")
+        video_file = self.filename
+        vidcap = cv2.VideoCapture(video_file)
+        file_path = "/Users/Admin/CS2108Assignment_2/deeplearning/data/frame/" + self.videoname + "-"
+        print(file_path)
+        keyframes = getKeyFrames(vidcap=vidcap, store_frame_path=file_path)
 
         self.frames = []
         for frame in allframes:
