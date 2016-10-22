@@ -2,7 +2,7 @@ from Tkinter import *
 import tkFileDialog
 from PIL import Image, ImageTk, ImageDraw, ImageFont
 
-import cv2
+from pathlib import Path
 import os
 import matplotlib
 
@@ -12,7 +12,9 @@ matplotlib.use('TkAgg')
 import moviepy.editor as mp
 import os.path
 import glob
-import json
+import numpy as np
+import scipy.io as sio
+from video import Video
 
 
 
@@ -34,14 +36,34 @@ class UI_class:
         self.cbutton.grid(row=1, column=2)
         downspace = Label(topframe).grid(row=3, columnspan=4)
 
-        #self.loadAllVideos("/Users/WSH/Downloads/CS2108-Vine-Dataset/vine/training")
+        training_path = Path(os.getcwd()).parent.joinpath("CS2108-Vine-Dataset/vine/training")
+        store_path_train = Path(os.getcwd()).parent.joinpath("store/acoustic/training.mat")
+        self.X_train = self.extract_x_training_set(str(training_path), str(store_path_train), True, "X_train")
 
-        print(sys.path)
+        validation_path = Path(os.getcwd()).parent.joinpath("CS2108-Vine-Dataset/vine/validation")
+        store_path_valid = Path(os.getcwd()).parent.joinpath("store/acoustic/validation.mat")
+        self.X_test = self.extract_x_training_set(str(validation_path), str(store_path_valid), True, "X_test")
+
+        venue_path = Path(os.getcwd()).parent.joinpath("CS2108-Vine-Dataset/vine-venue-training.txt")
+        store_path_venue = Path(os.getcwd()).parent.joinpath("store/acoustic/venues.mat")
+        self.Y_train = self.extract_y_training_set(str(venue_path), str(store_path_venue), True, "Y_train")
+
+        #TODO self.Y_train = self.extract_y_training_set(str(path), str(store_path))
+        #TODO allow user to select folder path and use self.extract_x_training_set to get X_test
+        #TODO allow user to select 1 file path / make new method like self.extract_x_training_set for 1 file
+
+        #TODO use classifier code to get Y_predicted which is an array like this [2.1, 3.4]
+        #TODO (basically if it predicts 2.1 = venue 2, 3.6 = venue 4 etc) round to nearest integer to get venue #
+
+        #TODO display venue
+
+        #TODO calculate f1 by trying out every weight possible
+        #TODO display best weight combination
+
         self.master.mainloop()
 
 
     def browse_query_img(self):
-
         self.query_img_frame = Frame(self.master)
         self.query_img_frame.pack()
         from tkFileDialog import askopenfilename
@@ -93,7 +115,7 @@ class UI_class:
             audiopath = os.path.join(audiopath, "audio/test.mp3")
             self.getAudioClip(self.filename, audiopath)
             feature_mfcc, feature_spect, feature_zerocrossing, feature_energy = getAcousticFeatures(audiopath)
-            print("yay we win at life")
+
         except Exception, e:
             print(e)
 
@@ -128,21 +150,104 @@ class UI_class:
 
         self.query_img_frame.mainloop()
 
+
     def getAudioClip(self, video_reading_path, audio_storing_path):
         clip = mp.VideoFileClip(video_reading_path)
         clip.audio.write_audiofile(audio_storing_path)
 
 
-    def loadAllVideos(self, pathname):
+    def extract_x_training_set(self, pathname, store_path, is_storing, name):
+        current_dir = os.getcwd()
+        if (self.training_set_exists(store_path)):
+            try:
+                matrix = sio.loadmat(store_path)[name]
+                if matrix is not None:
+                    return matrix
+            except:
+                pass
+
         os.chdir(pathname)
+        videos = []
+        column_size = 0
+        ctr = 0
 
-        data = []
         for file in glob.glob("*.mp4"):
-            videoPath = os.path.abspath(file)
-            # videoPath = os.path.dirname(self.filename)
-            feature_energy = getAcousticFeatures(videoPath)
+            video_path = os.path.abspath(file)
+            feature_mfcc, feature_spect, feature_zerocrossing, feature_energy = getAcousticFeatures(video_path)
+
+            # extract feature vector and get the max feature_vector size (they're not all the same size)
+            feature_vector = self.combine_features(feature_mfcc, feature_spect, feature_zerocrossing, feature_energy)
+            column_size = max(len(feature_vector), column_size)
+
+            video = Video(file, feature_vector)
+            videos.append(video)
+            ctr += 1
+            if (ctr > 10):
+                break
+
+        matrix = self.combine_videos(videos, len(videos), column_size)
+        os.chdir(current_dir)
+        if (is_storing):
+            sio.savemat(store_path, {name: matrix})
+        return matrix
 
 
+    def extract_y_training_set(self, pathname, store_path, is_storing, name):
+        if (self.training_set_exists(store_path)):
+            try:
+                matrix = sio.loadmat(store_path)[name]
+                if matrix is not None:
+                    return matrix
+            except:
+                pass
+
+                Y_train = []
+        with open(pathname, 'r') as file:
+            lines = file.readlines()[:11]
+            lines = [line.split('\t')[1].strip() for line in lines]
+            venues = lines
+
+        if (is_storing):
+            sio.savemat(store_path, {'Y_train': Y_train})
+        return matrix
+
+
+    def combine_features(self, feature_mfcc, feature_spect, feature_zerocrossing, feature_energy):
+        feature_mfcc = self.mean_pooling(feature_mfcc)
+        feature_spect = self.mean_pooling(feature_spect)
+        feature_zerocrossing = self.mean_pooling(feature_zerocrossing)
+        feature_energy = self.mean_pooling(feature_energy)
+        result = []
+
+        for i in range(len(feature_mfcc)):
+            result.append(feature_mfcc[i])
+        for i in range(len(feature_spect)):
+            result.append(feature_spect[i])
+        for i in range(len(feature_zerocrossing)):
+            result.append(feature_zerocrossing[i])
+        for i in range(len(feature_energy)):
+            result.append(feature_energy[i])
+        return result
+
+
+    def mean_pooling(self, lst):
+        dim = np.ndim(lst)
+        if dim == 1:
+            return lst
+        return np.mean(lst, axis=0)
+
+
+    def combine_videos(self, videos, rows, cols):
+        matrix = np.zeros((rows, cols))
+        for row in range(len(videos)):
+            vector = videos[row].feature_vector
+            for col in range(len(vector)):
+                matrix[row][col] = vector[col]
+        return matrix
+
+    def training_set_exists(self, pathname):
+        my_file = Path(pathname)
+        return True if my_file.is_file() else False
 
 
 

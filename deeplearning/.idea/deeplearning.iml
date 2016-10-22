@@ -5,6 +5,7 @@
       <sourceFolder url="file://$MODULE_DIR$/featureextracting/acoustic" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/pyimagesearch" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/preprocessing" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/model" isTestSource="false" />
     </content>
     <orderEntry type="jdk" jdkName="Python 2.7.12 (/usr/local/bin/python)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
