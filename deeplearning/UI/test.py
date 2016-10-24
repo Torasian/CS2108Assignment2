@@ -235,6 +235,7 @@ class UI_class:
         arr = []
         with open(pathname, 'r') as file:
             lines = file.readlines()
+            lines.sort()
             for line in lines:
                 string = line.split('\t')[1].strip()
                 venue = float(string)
@@ -245,15 +246,14 @@ class UI_class:
             dic = sio.loadmat(store_path)
             dic[name] = arr
             sio.savemat(store_path, dic)
-
         return arr
 
 
     def combine_features(self, feature_mfcc, feature_spect, feature_zerocrossing, feature_energy):
-        feature_mfcc = self.mean_pooling(feature_mfcc)[:200]
-        feature_spect = self.mean_pooling(feature_spect)[:200]
-        feature_zerocrossing = self.mean_pooling(feature_zerocrossing)[:200]
-        feature_energy = self.mean_pooling(feature_energy)[:200]
+        feature_mfcc = self.mean_pooling(feature_mfcc)
+        feature_spect = self.mean_pooling(feature_spect)
+        feature_zerocrossing = self.mean_pooling(feature_zerocrossing)
+        feature_energy = self.mean_pooling(feature_energy)
         result = []
 
         for i in range(len(feature_mfcc)):

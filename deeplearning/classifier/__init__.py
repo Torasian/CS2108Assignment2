@@ -22,7 +22,9 @@ def mySVM(mat_path, output_path):
     X_test  = np.asmatrix(mat_contents['X_test'])
     Y_gnd  = np.asmatrix(mat_contents['Y_gnd'])
 
-    cols = min(X_train.shape[1], X_test.shape[1])
+    cols = max(X_train.shape[1], X_test.shape[1])
+    X_train = pad_if_needed(X_train, cols)
+    X_test = pad_if_needed(X_test, cols)
 
     if (debug):
         print("X_train: " + str(X_train.shape))
@@ -44,9 +46,21 @@ def mySVM(mat_path, output_path):
 
     # 5. Save the predicted results and ground truth.
     sio.savemat(output_path, {'Y_predicted': Y_predicted, 'Y_gnd': Y_gnd})
-
     return Y_predicted
 
+def pad_if_needed(old_matrix, length):
+    if (old_matrix.shape[1] >= length):
+        return old_matrix
+
+    rows = old_matrix.shape[0]
+    cols = length
+
+    new_matrix = np.zeros((rows, cols))
+
+    for row in range(rows):
+        for col in range(old_matrix.shape[1]):
+            new_matrix[row][col] = old_matrix.item((row, col))
+    return np.array(new_matrix)
 
 if __name__ == '__main__':
     mat_path = 'Sample.mat'
