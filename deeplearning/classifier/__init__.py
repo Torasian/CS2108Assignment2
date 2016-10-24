@@ -24,13 +24,6 @@ def mySVM(mat_path, output_path):
 
     cols = min(X_train.shape[1], X_test.shape[1])
 
-    X_train = X_train.transpose()[:cols].transpose()
-    X_test = X_test.transpose()[:cols].transpose()
-    if Y_train.shape[0] == 1:
-        Y_train = Y_train.transpose()
-    if Y_gnd.shape[0] == 1:
-        Y_gnd = Y_gnd.transpose()
-
     if (debug):
         print("X_train: " + str(X_train.shape))
         print("Y_train: " + str(Y_train.shape))

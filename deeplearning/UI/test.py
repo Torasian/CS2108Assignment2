@@ -42,22 +42,22 @@ class UI_class:
         output_path = str(Path(os.getcwd()).parent.joinpath("store/acoustic/output"))
 
         #X_train
-        training_path = Path(os.getcwd()).parent.joinpath("CS2108-Vine-Dataset/vine/training")
+        training_path = str(Path(os.getcwd()).parent.joinpath("CS2108-Vine-Dataset/vine/training"))
         store_path_train = input_path
         self.X_train = self.extract_x_set(training_path, store_path_train, True, "X_train")
 
         #X_test
-        validation_path = Path(os.getcwd()).parent.joinpath("CS2108-Vine-Dataset/vine/validation")
+        validation_path = str(Path(os.getcwd()).parent.joinpath("CS2108-Vine-Dataset/vine/validation"))
         store_path_valid = input_path
         self.X_test = self.extract_x_set(validation_path, store_path_valid, True, "X_test")
 
         #Y_train
-        venue_path = Path(os.getcwd()).parent.joinpath("CS2108-Vine-Dataset/vine-venue-training.txt")
+        venue_path = str(Path(os.getcwd()).parent.joinpath("CS2108-Vine-Dataset/vine-venue-training.txt"))
         store_path_venue = input_path
         self.Y_train = self.extract_y_set(venue_path, store_path_venue, True, "Y_train")
 
         #Y_gnd
-        validation_venue_path = Path(os.getcwd()).parent.joinpath("CS2108-Vine-Dataset/vine-venue-validation.txt")
+        validation_venue_path = str(Path(os.getcwd()).parent.joinpath("CS2108-Vine-Dataset/vine-venue-validation.txt"))
         store_path_venue = input_path
         self.Y_gnd = self.extract_y_set(validation_venue_path, store_path_venue, True, "Y_gnd")
 
@@ -214,6 +214,7 @@ class UI_class:
         matrix = self.combine_videos(videos, len(videos), column_size)
         os.chdir(current_dir)
         if (is_storing):
+            matrix = np.array(matrix)
             dic = sio.loadmat(store_path)
             dic[name] = matrix
             sio.savemat(store_path, dic)
@@ -227,34 +228,35 @@ class UI_class:
                 dic = sio.loadmat(store_path)
                 if (debug):
                     print(dic.keys())
-                matrix = dic[name]
-                return matrix
+                    arr = dic[name]
+                return arr
             except Exception, err:
                 if (debug):
                     traceback.print_exc()
                 pass
 
-        matrix = []
+        arr = []
         with open(pathname, 'r') as file:
             lines = file.readlines()[:20]
             for line in lines:
                 string = line.split('\t')[1].strip()
                 venue = float(string)
-                matrix.append(venue)
+                arr.append(venue)
 
         if (is_storing):
+            arr = np.array([arr])
             dic = sio.loadmat(store_path)
-            dic[name] = matrix
+            dic[name] = arr
             sio.savemat(store_path, dic)
 
-        return matrix
+        return arr
 
 
     def combine_features(self, feature_mfcc, feature_spect, feature_zerocrossing, feature_energy):
-        feature_mfcc = self.mean_pooling(feature_mfcc)
-        feature_spect = self.mean_pooling(feature_spect)
-        feature_zerocrossing = self.mean_pooling(feature_zerocrossing)
-        feature_energy = self.mean_pooling(feature_energy)
+        feature_mfcc = self.mean_pooling(feature_mfcc)[:50]
+        feature_spect = self.mean_pooling(feature_spect)[:50]
+        feature_zerocrossing = self.mean_pooling(feature_zerocrossing)[:50]
+        feature_energy = self.mean_pooling(feature_energy)[:50]
         result = []
 
         for i in range(len(feature_mfcc)):
@@ -265,7 +267,7 @@ class UI_class:
             result.append(feature_zerocrossing[i])
         for i in range(len(feature_energy)):
             result.append(feature_energy[i])
-        return result
+        return result[:30]
 
 
     def mean_pooling(self, lst):
@@ -279,6 +281,7 @@ class UI_class:
         matrix = np.zeros((rows, cols))
         for row in range(len(videos)):
             vector = videos[row].feature_vector
+            #for col in range(len(vector)):
             for col in range(len(vector)):
                 matrix[row][col] = vector[col]
         return matrix
