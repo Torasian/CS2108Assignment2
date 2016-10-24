@@ -7,6 +7,7 @@ import os
 import matplotlib
 
 from extract_frame import getKeyFrames
+from classifier import mySVM
 
 matplotlib.use('TkAgg')
 import moviepy.editor as mp
@@ -37,32 +38,36 @@ class UI_class:
         self.cbutton.grid(row=1, column=2)
         downspace = Label(topframe).grid(row=3, columnspan=4)
 
+        input_path = str(Path(os.getcwd()).parent.joinpath("store/acoustic/input"))
+        output_path = str(Path(os.getcwd()).parent.joinpath("store/acoustic/output"))
 
         #X_train
         training_path = Path(os.getcwd()).parent.joinpath("CS2108-Vine-Dataset/vine/training")
-        store_path_train = Path(os.getcwd()).parent.joinpath("store/acoustic/input")
-        self.X_train = self.extract_x_set(str(training_path), str(store_path_train), True, "X_train")
+        store_path_train = input_path
+        self.X_train = self.extract_x_set(training_path, store_path_train, True, "X_train")
 
         #X_test
         validation_path = Path(os.getcwd()).parent.joinpath("CS2108-Vine-Dataset/vine/validation")
-        store_path_valid = Path(os.getcwd()).parent.joinpath("store/acoustic/input")
-        self.X_test = self.extract_x_set(str(validation_path), str(store_path_valid), True, "X_test")
+        store_path_valid = input_path
+        self.X_test = self.extract_x_set(validation_path, store_path_valid, True, "X_test")
 
         #Y_train
         venue_path = Path(os.getcwd()).parent.joinpath("CS2108-Vine-Dataset/vine-venue-training.txt")
-        store_path_venue = Path(os.getcwd()).parent.joinpath("store/acoustic/input")
-        self.Y_train = self.extract_y_set(str(venue_path), str(store_path_venue), True, "Y_train")
+        store_path_venue = input_path
+        self.Y_train = self.extract_y_set(venue_path, store_path_venue, True, "Y_train")
 
         #Y_gnd
         validation_venue_path = Path(os.getcwd()).parent.joinpath("CS2108-Vine-Dataset/vine-venue-validation.txt")
-        store_path_venue = Path(os.getcwd()).parent.joinpath("store/acoustic/input")
-        self.Y_gnd = self.extract_y_set(str(validation_venue_path), str(store_path_venue), True, "Y_gnd")
+        store_path_venue = input_path
+        self.Y_gnd = self.extract_y_set(validation_venue_path, store_path_venue, True, "Y_gnd")
 
         #Testing SVM
         #TODO put Y_train X_train X_test Y_gnd in one same input.mat workplace -- code is commeted out to run without error
-        #input_path = ("/Users/Admin/CS2108Assignment_2/deeplearning/store/acoustic/input.mat")
-        #output_path = ("/Users/Admin/CS2108Assignment_2/deeplearning/store/acoustic/output.mat")
-        #mySVM(input_path, output_path)
+        try:
+            mySVM(input_path, output_path)
+        except Exception, err:
+            if (debug):
+                traceback.print_exc()
 
         #TODO allow user to select folder path and use self.extract_x_training_set to get X_test
         #TODO allow user to select 1 file path / make new method like self.extract_x_training_set for 1 file
@@ -203,7 +208,7 @@ class UI_class:
             video = Video(file, feature_vector)
             videos.append(video)
             ctr += 1
-            if ctr > 20:
+            if ctr > 19:
                 break
 
         matrix = self.combine_videos(videos, len(videos), column_size)
@@ -231,7 +236,7 @@ class UI_class:
 
         matrix = []
         with open(pathname, 'r') as file:
-            lines = file.readlines()[:21]
+            lines = file.readlines()[:20]
             for line in lines:
                 string = line.split('\t')[1].strip()
                 venue = float(string)

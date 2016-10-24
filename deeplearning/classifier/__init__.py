@@ -3,12 +3,14 @@ __author__ = 'xiangwang1223@gmail.com'
 import numpy as np
 import scipy.io as sio
 from sklearn import svm
+import traceback
 from sklearn.metrics import classification_report
+
+debug = True
 
 # Trian your own classifier.
 # Here is the simple implementation of SVM classification.
 def mySVM(mat_path, output_path):
-    # 1. Load matricies from the .mat file, including X_train, X_test, Y_train, Y_gnd;
     mat_contents = sio.loadmat(mat_path)
 
     # 2. X_train with instance_num * feature_num dimensions, and its corresponding venue labels Y_train
@@ -19,7 +21,22 @@ def mySVM(mat_path, output_path):
 
     X_test  = np.asmatrix(mat_contents['X_test'])
     Y_gnd  = np.asmatrix(mat_contents['Y_gnd'])
-    print('Data Load Done.')
+
+    cols = min(X_train.shape[1], X_test.shape[1])
+
+    X_train = X_train.transpose()[:cols].transpose()
+    X_test = X_test.transpose()[:cols].transpose()
+    if Y_train.shape[0] == 1:
+        Y_train = Y_train.transpose()
+    if Y_gnd.shape[0] == 1:
+        Y_gnd = Y_gnd.transpose()
+
+    if (debug):
+        print("X_train: " + str(X_train.shape))
+        print("Y_train: " + str(Y_train.shape))
+        print("X_test: " + str(X_test.shape))
+        print("Y_grd: " + str(Y_gnd.shape))
+        print('Data Load Done.')
 
     # 3. Generate the predicted label matrix Y_predicted for X_test via SVM or other classifiers.
     instance_num, class_num = Y_gnd.shape
