@@ -64,11 +64,8 @@ class UI_class:
 
         #Testing SVM
         #TODO put Y_train X_train X_test Y_gnd in one same input.mat workplace -- code is commeted out to run without error
-        try:
-            mySVM(input_path, output_path)
-        except Exception, err:
-            if (debug):
-                traceback.print_exc()
+        self.Y_predicted = mySVM(input_path, output_path)
+
 
         #TODO allow user to select folder path and use self.extract_x_training_set to get X_test
         #TODO allow user to select 1 file path / make new method like self.extract_x_training_set for 1 file
@@ -80,6 +77,7 @@ class UI_class:
         #TODO display venue
 
         #TODO calculate f1 by trying out every weight possible
+        f1 = self.compare_vectors(self.Y_gnd, self.Y_predicted)
         #TODO display best weight combination
 
         self.master.mainloop()
@@ -292,7 +290,23 @@ class UI_class:
         sio.savemat(pathname, {})
         return False
 
+    def compare_vectors(self, vector1, vector2):
+        total = len(vector1)
+        ctr = 0.0
+        bad_values = 0
+        number_f = 0
+        for row in range(len(vector1)):
+            val1 = vector1[row][0]
+            val2 = vector2.flat[row]
+            ctr += 1 if (val1 == round(val2, 0)) else 0
+            bad_values += 1 if (val1 != round(val2, 0)) else 0
+            number_f += 1 if (val2 == 15.5) else 0
+        f1 = ctr / total
+        return f1
 
 
 root = Tk()
-window = UI_class(root, search_path='../data/video/', frame_storing_path='../data/frame/')
+try:
+    window = UI_class(root, search_path='../data/video/', frame_storing_path='../data/frame/')
+except Exception:
+    traceback.print_exc()

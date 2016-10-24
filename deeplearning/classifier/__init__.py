@@ -39,11 +39,13 @@ def mySVM(mat_path, output_path):
     # 4. Train the classifier.
     model = svm.SVR(kernel='rbf', degree=3, gamma=0.1, shrinking=True, verbose=False, max_iter=-1)
     model.fit(X_train, Y_train)
-    Y_predicted = np.asmatrix(model.predict(X_test))
+    Y_predicted = np.asmatrix(model.predict(X_test)).transpose()
     print('SVM Train Done.')
 
     # 5. Save the predicted results and ground truth.
     sio.savemat(output_path, {'Y_predicted': Y_predicted, 'Y_gnd': Y_gnd})
+
+    return Y_predicted
 
 
 if __name__ == '__main__':
