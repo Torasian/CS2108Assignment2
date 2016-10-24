@@ -15,10 +15,11 @@ import glob
 import numpy as np
 import scipy.io as sio
 from video import Video
-
-
+import cv2
+import traceback
 
 from extract_acoustic import getAcousticFeatures
+debug = True
 
 class UI_class:
     def __init__(self, master, search_path, frame_storing_path):
@@ -36,21 +37,36 @@ class UI_class:
         self.cbutton.grid(row=1, column=2)
         downspace = Label(topframe).grid(row=3, columnspan=4)
 
+
+        #X_train
         training_path = Path(os.getcwd()).parent.joinpath("CS2108-Vine-Dataset/vine/training")
-        store_path_train = Path(os.getcwd()).parent.joinpath("store/acoustic/training.mat")
-        self.X_train = self.extract_x_training_set(str(training_path), str(store_path_train), True, "X_train")
+        store_path_train = Path(os.getcwd()).parent.joinpath("store/acoustic/input")
+        self.X_train = self.extract_x_set(str(training_path), str(store_path_train), True, "X_train")
 
+        #X_test
         validation_path = Path(os.getcwd()).parent.joinpath("CS2108-Vine-Dataset/vine/validation")
-        store_path_valid = Path(os.getcwd()).parent.joinpath("store/acoustic/validation.mat")
-        self.X_test = self.extract_x_training_set(str(validation_path), str(store_path_valid), True, "X_test")
+        store_path_valid = Path(os.getcwd()).parent.joinpath("store/acoustic/input")
+        self.X_test = self.extract_x_set(str(validation_path), str(store_path_valid), True, "X_test")
 
+        #Y_train
         venue_path = Path(os.getcwd()).parent.joinpath("CS2108-Vine-Dataset/vine-venue-training.txt")
-        store_path_venue = Path(os.getcwd()).parent.joinpath("store/acoustic/venues.mat")
-        self.Y_train = self.extract_y_training_set(str(venue_path), str(store_path_venue), True, "Y_train")
+        store_path_venue = Path(os.getcwd()).parent.joinpath("store/acoustic/input")
+        self.Y_train = self.extract_y_set(str(venue_path), str(store_path_venue), True, "Y_train")
 
-        #TODO self.Y_train = self.extract_y_training_set(str(path), str(store_path))
+        #Y_gnd
+        validation_venue_path = Path(os.getcwd()).parent.joinpath("CS2108-Vine-Dataset/vine-venue-validation.txt")
+        store_path_venue = Path(os.getcwd()).parent.joinpath("store/acoustic/input")
+        self.Y_gnd = self.extract_y_set(str(validation_venue_path), str(store_path_venue), True, "Y_gnd")
+
+        #Testing SVM
+        #TODO put Y_train X_train X_test Y_gnd in one same input.mat workplace -- code is commeted out to run without error
+        #input_path = ("/Users/Admin/CS2108Assignment_2/deeplearning/store/acoustic/input.mat")
+        #output_path = ("/Users/Admin/CS2108Assignment_2/deeplearning/store/acoustic/output.mat")
+        #mySVM(input_path, output_path)
+
         #TODO allow user to select folder path and use self.extract_x_training_set to get X_test
         #TODO allow user to select 1 file path / make new method like self.extract_x_training_set for 1 file
+
 
         #TODO use classifier code to get Y_predicted which is an array like this [2.1, 3.4]
         #TODO (basically if it predicts 2.1 = venue 2, 3.6 = venue 4 etc) round to nearest integer to get venue #
@@ -84,6 +100,7 @@ class UI_class:
 
         COLUMNS = len(self.frames)
         self.columns = COLUMNS
+        print (COLUMNS)
         image_count = 0
 
         if COLUMNS == 0:
@@ -156,14 +173,18 @@ class UI_class:
         clip.audio.write_audiofile(audio_storing_path)
 
 
-    def extract_x_training_set(self, pathname, store_path, is_storing, name):
+    def extract_x_set(self, pathname, store_path, is_storing, name):
         current_dir = os.getcwd()
-        if (self.training_set_exists(store_path)):
+        if (self.set_exists_or_create(store_path)):
             try:
-                matrix = sio.loadmat(store_path)[name]
-                if matrix is not None:
-                    return matrix
-            except:
+                dic = sio.loadmat(store_path)
+                if (debug):
+                    print(dic.keys())
+                matrix = dic[name]
+                return matrix
+            except Exception, err:
+                if (debug):
+                    traceback.print_exc()
                 pass
 
         os.chdir(pathname)
@@ -182,33 +203,45 @@ class UI_class:
             video = Video(file, feature_vector)
             videos.append(video)
             ctr += 1
-            if (ctr > 10):
+            if ctr > 20:
                 break
 
         matrix = self.combine_videos(videos, len(videos), column_size)
         os.chdir(current_dir)
         if (is_storing):
-            sio.savemat(store_path, {name: matrix})
+            dic = sio.loadmat(store_path)
+            dic[name] = matrix
+            sio.savemat(store_path, dic)
+
         return matrix
 
 
-    def extract_y_training_set(self, pathname, store_path, is_storing, name):
-        if (self.training_set_exists(store_path)):
+    def extract_y_set(self, pathname, store_path, is_storing, name):
+        if (self.set_exists_or_create(store_path)):
             try:
-                matrix = sio.loadmat(store_path)[name]
-                if matrix is not None:
-                    return matrix
-            except:
+                dic = sio.loadmat(store_path)
+                if (debug):
+                    print(dic.keys())
+                matrix = dic[name]
+                return matrix
+            except Exception, err:
+                if (debug):
+                    traceback.print_exc()
                 pass
 
-                Y_train = []
+        matrix = []
         with open(pathname, 'r') as file:
-            lines = file.readlines()[:11]
-            lines = [line.split('\t')[1].strip() for line in lines]
-            venues = lines
+            lines = file.readlines()[:21]
+            for line in lines:
+                string = line.split('\t')[1].strip()
+                venue = float(string)
+                matrix.append(venue)
 
         if (is_storing):
-            sio.savemat(store_path, {'Y_train': Y_train})
+            dic = sio.loadmat(store_path)
+            dic[name] = matrix
+            sio.savemat(store_path, dic)
+
         return matrix
 
 
@@ -245,9 +278,12 @@ class UI_class:
                 matrix[row][col] = vector[col]
         return matrix
 
-    def training_set_exists(self, pathname):
-        my_file = Path(pathname)
-        return True if my_file.is_file() else False
+    def set_exists_or_create(self, pathname):
+        my_file = Path(pathname + ".mat")
+        if my_file.is_file():
+            return True
+        sio.savemat(pathname, {})
+        return False
 
 
 
