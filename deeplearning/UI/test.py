@@ -208,8 +208,6 @@ class UI_class:
             video = Video(file, feature_vector)
             videos.append(video)
             ctr += 1
-            if ctr > 19:
-                break
 
         matrix = self.combine_videos(videos, len(videos), column_size)
         os.chdir(current_dir)
@@ -237,14 +235,14 @@ class UI_class:
 
         arr = []
         with open(pathname, 'r') as file:
-            lines = file.readlines()[:20]
+            lines = file.readlines()
             for line in lines:
                 string = line.split('\t')[1].strip()
                 venue = float(string)
                 arr.append(venue)
 
         if (is_storing):
-            arr = np.array([arr])
+            arr = np.array([arr]).transpose()
             dic = sio.loadmat(store_path)
             dic[name] = arr
             sio.savemat(store_path, dic)
@@ -253,10 +251,10 @@ class UI_class:
 
 
     def combine_features(self, feature_mfcc, feature_spect, feature_zerocrossing, feature_energy):
-        feature_mfcc = self.mean_pooling(feature_mfcc)[:50]
-        feature_spect = self.mean_pooling(feature_spect)[:50]
-        feature_zerocrossing = self.mean_pooling(feature_zerocrossing)[:50]
-        feature_energy = self.mean_pooling(feature_energy)[:50]
+        feature_mfcc = self.mean_pooling(feature_mfcc)[:200]
+        feature_spect = self.mean_pooling(feature_spect)[:200]
+        feature_zerocrossing = self.mean_pooling(feature_zerocrossing)[:200]
+        feature_energy = self.mean_pooling(feature_energy)[:200]
         result = []
 
         for i in range(len(feature_mfcc)):
@@ -267,7 +265,7 @@ class UI_class:
             result.append(feature_zerocrossing[i])
         for i in range(len(feature_energy)):
             result.append(feature_energy[i])
-        return result[:30]
+        return result
 
 
     def mean_pooling(self, lst):
