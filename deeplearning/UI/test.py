@@ -7,7 +7,7 @@ import os
 import matplotlib
 
 from extract_frame import getKeyFrames
-from classifier import mySVM
+from __init__ import mySVM
 
 matplotlib.use('TkAgg')
 
@@ -78,6 +78,7 @@ class UI_class:
 
         #TODO calculate f1 by trying out every weight possible
         f1 = self.compare_vectors(self.Y_gnd, self.Y_predicted)
+        print(f1)
         #TODO display best weight combination
 
         self.master.mainloop()
@@ -257,13 +258,21 @@ class UI_class:
         result = []
 
         for i in range(len(feature_mfcc)):
+            #if (feature_mfcc[i] <0):
+                #feature_mfcc[i] = 0
             result.append(feature_mfcc[i])
         for i in range(len(feature_spect)):
+            #if (feature_spect[i] < 0):
+                #feature_spect[i] = 0
             result.append(feature_spect[i])
-        for i in range(len(feature_zerocrossing)):
-            result.append(feature_zerocrossing[i])
-        for i in range(len(feature_energy)):
-            result.append(feature_energy[i])
+        #for i in range(len(feature_zerocrossing)):
+            #if (feature_zerocrossing[i] <0):
+                #feature_zerocrossing [i] = 0
+            #result.append(feature_zerocrossing[i])
+        #for i in range(len(feature_energy)):
+            #if (feature_energy[i] <0):
+                #feature_energy[i] = 0
+            #result.append(feature_energy[i])
         return result
 
 
